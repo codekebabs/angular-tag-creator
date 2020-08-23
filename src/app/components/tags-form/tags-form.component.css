@@ -1,0 +1,4 @@
+.strike-tag {
+    text-decoration: line-through;
+    pointer-events: none;
+}

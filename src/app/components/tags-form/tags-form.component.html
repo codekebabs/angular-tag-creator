@@ -1,0 +1,46 @@
+<form [formGroup]="tagsForm" (ngSubmit)="onSubmit()">
+  <div class="card p-4 mt-2">
+  <div class="card-title">
+    <h5>Choose tags or create:</h5>
+  </div>
+<div class="card-body">
+   <ng-container  class="tags-list" *ngFor="let tagFormGroup of tagsForm.get('tags')['controls']; let i = index">
+     {{tagFormGroup.deleted}}
+      <div [formGroup]="tagFormGroup" class="tags-item mt-1 form-group row">
+          <div class="col-2">
+            <input *ngIf="tagFormGroup.controls['id'].value" class="form-control-sm"   [ngClass]="tagFormGroup.controls['deleted'].value ? 'strike-tag' : ''" type="radio" name="checked"  formControlName="checked" [value]="tagFormGroup.controls['name']"/>
+          </div>
+           <div class="col-6">
+            <input type="text"  [ngClass]="tagFormGroup.controls['deleted'].value ? 'strike-tag' : ''" [readonly]="tagFormGroup.controls['deleted'].value"  class="form-control form-control-sm" formControlName="name" (input)="tagInput(i)">
+          </div>
+              <div class="col-2">
+            <input type="checkbox" *ngIf="i < tagsForm.get('tags')['controls'].length - 1" (click)="setDeleted(i)" class="form-control-sm" formControlName="deleted">
+          </div>
+      </div>
+
+      <div *ngIf="tagFormGroup.controls['duplicate'].value" class="text-danger">
+            <div>
+            Already exists.
+          </div>
+      </div>
+      <div *ngIf="tagFormGroup.controls['name'].invalid && tagFormGroup.controls['name'].dirty" class="text-danger">
+            <div *ngIf="tagFormGroup.controls['name'].errors.required">
+            Name is required.
+          </div>
+        </div>
+        <div *ngIf="tagFormGroup.controls['name'].invalid && (tagFormGroup.controls['name'].dirty || tagFormGroup.controls['name'].touched)" class="text-danger">
+            <div *ngIf="tagFormGroup.controls['name'].errors.maxlength">
+            Exceeds 5 characters.
+          </div>
+        </div>
+    </ng-container>
+    <div class="row" *ngIf="tagsForm.get('tags')['controls'].length >= 5">
+      Max 5 allowed
+    </div>
+   <div class="row mt-2">
+       <button type="button" (click)="reset()" class="btn btn-light col-md-4 col-xs-12 col-sm-12 ">Cancel</button>
+        <input type="submit" class="btn btn-success offset-md-2  col-md-4 col-sm-12 col-xs-12"  [disabled]="!tagsForm.valid" value="Submit"/>
+    </div>
+  </div>
+  </div>
+</form>
