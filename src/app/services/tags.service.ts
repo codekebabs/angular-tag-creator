@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Tag } from '../models/tag';
+import { FormArray } from '@angular/forms';
 
 @Injectable()
 export class TagsService {
@@ -23,10 +24,27 @@ export class TagsService {
     return this.tags;
   }
 
-  updateTags(tags: Tag[]) {
-    this.tags = tags.filter(x => !x.deleted);
-    this.tags.forEach(x => x.id = x.id === 0 || !x.id ? 12 : x.id);
+  updateTags(tagsArray: FormArray) {
+    console.log(tagsArray)
+    this.tags = this.convertToTagList(tagsArray).filter(x => !x.deleted);
     return this.tags;
+  }
+
+  convertToTagList(tagsFormArray): Tag[] {
+     const tagList = [];
+     for (let i = 0;i < tagsFormArray.length;i++){
+       const newTag = new Tag();
+       const formTag = tagsFormArray.at(i);
+       if (formTag.get('name').value) {
+        newTag.id = formTag.get('id').value;
+        newTag.name = formTag.get('name').value;
+        newTag.deleted = formTag.get('deleted').value;
+        newTag.dirty = formTag.get('dirty').value;
+        newTag.checked = formTag.get('checked').value;
+        tagList.push(newTag);
+       }
+     }
+     return tagList;
   }
 
   setDirty(tags: Tag[]) {

@@ -5,7 +5,6 @@ import { FormGroup, FormControl } from '@angular/forms';
 import { Validators } from '@angular/forms';
 import { Tag } from '../../models/tag';
 import { TagsService } from '../../services/tags.service';
-import { duplicateValidator } from '../../validators/duplicate.validator'
 
 @Component({
   selector: 'app-tags-form',
@@ -29,54 +28,45 @@ export class TagsFormComponent implements OnInit {
   });
   }
 
-  setDirty(tagsArray: FormArray,i: number) {
-     tagsArray.at(i).get('dirty').setValue(true);
+  setDirty(tagItem: AbstractControl, value: boolean) {
+     tagItem.get('dirty').setValue(value);
   }
 
   tagInput(i: number) {
-    const tagsArray = this.tagsForm.controls.tags as FormArray;
-    if (tagsArray.at(i).get('id').value) {
-      this.setDirty(tagsArray, i);
+    const tagItem = this.tagsFormArray.at(i);
+    if (tagItem.get('id').value) {
+      this.setDirty(tagItem, true);
     }
-    if (i === tagsArray.length - 1) {
+    if (i ===  this.tagsFormArray.length - 1) {
       this.addFormControl(undefined, i);
     }
-    this.checkDuplicate(tagsArray.at(i).get('name').value);
-    //this.checkDuplicates(i);
-  }
-
-  checkDuplicate(name: string): boolean {
-      console.log(name)
-      const tagsArray = this.tagsForm.controls.tags as FormArray;
-      let found = -1;
-      if (name && name.length > 0) {
-        tagsArray.value.forEach(x => x.name === name && found++);
-        console.log(found >= 1);
-      }
-
-      return found > 1;
+    this.checkDuplicates(i);
   }
 
   checkDuplicates(currentIndex) {
-    const tagsArray = this.tagsForm.controls.tags as FormArray;
-    for (let i = 0; i < tagsArray.length; i++)
+    for (let i = 0; i <  this.tagsFormArray.length; i++)
     {
       let found = -1;
-      const tagItem = tagsArray.at(i);
+      const tagItem =  this.tagsFormArray.at(i);
       if (tagItem.get('name').value && tagItem.get('name').value.length > 0) {
-        tagsArray.value.forEach(x => x.name === tagItem.get('name').value && found++);
-        tagItem.get('duplicate').setValue(found >= 1);
-        return found >= 1
+         this.tagsFormArray.value.forEach(x => x.name === tagItem.get('name').value && found++);
+        if (i === currentIndex) { 
+          tagItem.get('duplicate').setValue(found >= 1);
+        } else if (found <= 0) {
+          tagItem.get('duplicate').setValue(false);
+        }
+        console.log(tagItem.get('name').errors)
+        tagItem.get('name').setErrors(found >= 1 ? { duplicate: true
+      }: tagItem.get('name').errors);
       }
     }
-    return false;
   }
 
   maxItems: boolean;
   addFormControl(tagObject?: Tag, i?: number) {
     let tagsArray = this.tagsForm.controls.tags as FormArray;
     
-    let arraylen = tagsArray.length;
+    let arraylen =  this.tagsFormArray.length;
     if (arraylen >= 5) {
       // exceeded length
       return;
@@ -84,7 +74,7 @@ export class TagsFormComponent implements OnInit {
 
     tagObject = tagObject ? tagObject : new Tag();
     
-    tagsArray.insert(arraylen, this.createSingleTag(tagObject));
+     this.tagsFormArray.insert(arraylen, this.createSingleTag(tagObject));
   }
 
   createSingleTag(tagObject: Tag) {
@@ -99,7 +89,6 @@ export class TagsFormComponent implements OnInit {
   }
 
   reset() {
-    console.log(this.tagsForm.controls.tags)
     this.buildForm();
   }
 
@@ -112,39 +101,24 @@ export class TagsFormComponent implements OnInit {
     }
   }
 
-  setDeleted(i) {
-    let tagsArray = this.tagsForm.controls.tags as FormArray;
-       
-    const item = tagsArray.at(i)
-    if (!item.get('id').value || item.get('id').value <= 0) {
-        tagsArray.removeAt(i);
-    } else
-    {
-      if (tagsArray.at(i).get('checked').value) {
-        tagsArray.at(i).get('dirty').setValue(true);
+  delete(i) {
+    const tagsArray = this.tagsForm.controls.tags as FormArray;
+    const item =  this.tagsFormArray.at(i)
+    if (!item.get('id').value || item.get('id').value < 0) {
+         this.tagsFormArray.removeAt(i);
+    } else if (!item.get('deleted').value) {
+        this.setDirty(item, true);
       } 
-    }
+  }
+
+  get tagsFormArray(): FormArray {
+    return this.tagsForm.controls.tags as FormArray;
   }
   onSubmit() {
-    
-     // TODO: Use EventEmitter with form value
-     const tagList = [];
-     const allTags = this.tagsForm.controls.tags as FormArray
-    console.warn(allTags);
-    return;
-     for (let i=0;i < allTags.length;i++){
-        const newTag = new Tag();
-        const formTag = allTags.at(i);
-       if (!formTag.get('name').value) {
-         continue;
-       }
-        newTag.id = formTag.get('id').value;
-        newTag.name = formTag.get('name').value;
-        newTag.deleted = formTag.get('deleted').value;
-        newTag.dirty = formTag.get('dirty').value;
-        newTag.checked = formTag.get('checked').value;
-        tagList.push(newTag);
-     }
+    // TODO: Use EventEmitter with form value
+    this.tagsService.updateTags(this.tagsFormArray);
     this.buildForm();
   }
+
+
 }

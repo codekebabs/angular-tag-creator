@@ -14,7 +14,7 @@
             <input type="text"  [ngClass]="tagFormGroup.controls['deleted'].value ? 'strike-tag' : ''" [readonly]="tagFormGroup.controls['deleted'].value"  class="form-control form-control-sm" formControlName="name" (input)="tagInput(i)">
           </div>
               <div class="col-2">
-            <input type="checkbox" *ngIf="i < tagsForm.get('tags')['controls'].length - 1" (click)="setDeleted(i)" class="form-control-sm" formControlName="deleted">
+            <input type="checkbox" *ngIf="i < tagsForm.get('tags')['controls'].length - 1" (click)="delete(i)" class="form-control-sm" formControlName="deleted">
           </div>
       </div>
 
